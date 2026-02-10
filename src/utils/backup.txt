@@ -1,0 +1,398 @@
+import React, { useState, useEffect, useCallback, useMemo } from "react"
+import { Plus, Trash2, Package } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { useUserRoleLevel } from "@/utils/roles"
+import { useSelector } from "react-redux"
+import { useToast } from "@/hooks/use-toast"
+
+export default function InventoryItemForm() {
+
+    const roleLevel = useUserRoleLevel();
+    const { toast } = useToast();
+
+    const [formData, setFormData] = useState({
+        siteId: {}, // Default site
+        items: [],
+    });
+
+    const [sites, setSites] = useState([]);
+    const [selectedSite, setSelectedSite] = useState(null);
+    const [selectedItemGroup, setSelectedItemGroup] = useState("");
+    const [selectedItem, setSelectedItem] = useState({});
+    const [itemGroups, setItemGroups] = useState([]);
+    const [items, setItems] = useState([]);
+    const [units, setUnits] = useState([]);
+    const [itemQuantity, setItemQuantity] = useState("");
+    const [filteredItems, setFilteredItems] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false)
+
+    const storedItemGroups = useSelector((state) => state.itemGroups) || [];
+    const storedItems = useSelector((state) => state.items) || [];
+    const storedUnits = useSelector((state) => state.units) || [];
+    const storedSites = useSelector((state) => state.sites) || [];
+
+    useEffect(() => {
+        setItemGroups(storedItemGroups.data);
+        setItems(storedItems.data);
+        setSites(storedSites.data);
+        setUnits(storedUnits.data);
+        // setSelectedSite(
+        //     storedSites.data.find((site) => site.id == roleLevel.siteId)
+        // );
+        setFormData({
+            ...formData,
+            siteId: storedSites.data.find(
+                (site) => site.id == roleLevel.siteId
+            ),
+        });
+    }, []);
+
+    useEffect(() => {
+        // Filter items based on selected item group
+        if (selectedItemGroup) {
+            const filtered = items.filter(
+                (item) => item.itemGroupId === selectedItemGroup
+            );
+            setFilteredItems(filtered);
+        } else {
+            setFilteredItems([]);
+        }
+
+        // Reset selected item when item group changes
+        setSelectedItem({});
+    }, [selectedItemGroup, items]);
+
+    // 3. Update the item selection handler
+    const handleItemChange = (item) => {
+        setSelectedItem(item);
+    };
+
+    const handleSiteChange = (site) => {
+        setSelectedSite(site);
+    };
+
+    // const addItem = () => {
+    //     console.log(selectedItem)
+    //     if (
+    //         !selectedItem.id ||
+    //         !itemQuantity ||
+    //         Number.parseFloat(itemQuantity) <= 0
+    //     ) {
+    //         toast({
+    //             title: "Invalid Item",
+    //             description: "Please select an item and enter a valid quantity.",
+    //             duration: 2000,
+    //             variant: "destructive",
+    //         });
+    //         return;
+    //     }
+
+    //     // Check if item already exists in the list
+    //     const existingItemIndex = formData.items.findIndex(
+    //         (item) => item.id === selectedItem.id
+    //     );
+
+    //     if (existingItemIndex !== -1) {
+    //         // Update existing item
+    //         const updatedItems = [...formData.items];
+    //         updatedItems[existingItemIndex] = {
+    //             ...updatedItems[existingItemIndex],
+    //             quantity: Number.parseFloat(itemQuantity),
+    //         };
+
+    //         setFormData((prev) => ({
+    //             ...prev,
+    //             items: updatedItems,
+    //         }));
+    //     } else {
+    //         const newItem = {
+    //             quantity: Number.parseFloat(itemQuantity),
+    //             status: "pending", // Initial status for each item
+    //             ...selectedItem,
+    //         };
+
+    //         setFormData((prev) => ({
+    //             ...prev,
+    //             items: [...prev.items, newItem],
+    //         }));
+    //     }
+
+    //     // Reset item selection fields
+    //     setSelectedItem({});
+    //     setItemQuantity("");
+
+    //     toast({
+    //         title: "Item Added",
+    //         duration: 1000,
+    //         description: "The item has been added to the requisition.",
+    //     });
+    // };
+
+    // const removeItem = (index) => {
+    //     const updatedItems = [...formData.items];
+    //     updatedItems.splice(index, 1);
+
+    //     setFormData((prev) => ({
+    //         ...prev,
+    //         items: updatedItems,
+    //     }));
+
+    //     toast({
+    //         title: "Item Removed",
+    //         description: "The item has been removed from the requisition.",
+    //     });
+    // };
+
+
+    const changeSite = () => {
+
+    }
+
+    const addItemToInventory = () => {
+        if (
+            !selectedItem.id ||
+            !itemQuantity ||
+            Number.parseFloat(itemQuantity) <= 0
+        ) {
+            toast({
+                title: "Invalid Item",
+                description: "Please select an item and enter a valid quantity.",
+                duration: 2000,
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const anItem = {
+            siteId: selectedSite.id,
+            itemId: selectedItem.id,
+            quantity: Number.parseFloat(itemQuantity),
+        }
+
+        console.log("Submitting entries:", anItem);
+        return;
+    }
+
+    // const handleSubmit = async () => {
+    //     setIsLoading(true)
+
+    //     try {
+    //         // Simulate API call
+    //         console.log("Submitting entries:", formData)
+    //         return;
+
+    //         // Replace with your actual API call
+    //         // const response = await fetch("https://cpc-erp-server.onrender.com/api/inventory", {
+    //         //   method: "POST",
+    //         //   headers: {
+    //         //     "Content-Type": "application/json",
+    //         //   },
+    //         //   body: JSON.stringify(entries),
+    //         // })
+
+    //         // if (!response.ok) {
+    //         //   throw new Error("Failed to submit inventory")
+    //         // }
+
+    //         // Simulate delay
+    //         await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    //         console.log("Inventory submitted successfully!")
+    //     } catch (error) {
+    //         console.error("Error submitting inventory:", error)
+    //         throw error
+    //     } finally {
+    //         setIsLoading(false)
+    //     }
+    // }
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Add Inventory Items
+                    </CardTitle>
+                    <CardDescription>Add multiple inventory items with quantities</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {/* Site Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="site">Site *</Label>
+                        <Select value={selectedSite} onValueChange={handleSiteChange}>
+                            <SelectTrigger id="site">
+                                <SelectValue placeholder="Select site" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sites.map((site) => (
+                                    <SelectItem key={site.id} value={site}>
+                                        {site.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.site && <p className="text-sm text-destructive">{errors.site}</p>}
+                    </div>
+
+                    <Separator />
+
+                    {/* Item Selection */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="itemGroup">Item Group *</Label>
+                            <Select value={selectedItemGroup} onValueChange={setSelectedItemGroup}>
+                                <SelectTrigger id="itemGroup">
+                                    <SelectValue placeholder="Select item group" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {itemGroups.length === 0 ? (
+                                        <SelectItem value={null} disabled>
+                                            No item groups available
+                                        </SelectItem>
+                                    ) : (
+                                        itemGroups.map((group) => (
+                                            <SelectItem key={group.id} value={group.id}>
+                                                {group.name}
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="item">Item *</Label>
+                            <Select
+                                value={selectedItem}
+                                onValueChange={handleItemChange}
+                                disabled={!selectedItemGroup}
+                            >
+                                <SelectTrigger id="item">
+                                    <SelectValue
+                                        placeholder={
+                                            selectedItemGroup
+                                                ? "Select item"
+                                                : "Select item group first"
+                                        }
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredItems.length === 0 ? (
+                                        <SelectItem value={null} disabled>
+                                            {selectedItemGroup
+                                                ? "No items in this group"
+                                                : "Select item group first"}
+                                        </SelectItem>
+                                    ) : (
+                                        filteredItems.map((item) => (
+                                            <SelectItem key={item.id} value={item}>
+                                                {item.name}
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                            {errors.item && <p className="text-sm text-destructive">{errors.item}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="quantity">Quantity *</Label>
+                            <div className="flex items-center space-x-2">
+                                <Input
+                                    id="quantity"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={itemQuantity}
+                                    onChange={(e) => setItemQuantity(e.target.value)}
+                                    placeholder="Enter quantity"
+                                />
+                                <div className="w-20">
+                                    {selectedItem && (
+                                        <span className="text-sm text-muted-foreground">
+                                            {selectedItem?.Unit?.name || ""}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity}</p>}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        {/* <Button type="button" onClick={addItem} disabled={!selectedItem || !itemQuantity}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+                        </Button> */}
+                        <Button className={"ml-2"} onClick={addItemToInventory}>
+                            Add to Inventory
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Items List */}
+            <div className="hidden rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Sr. No</TableHead>
+                            <TableHead>Item Group</TableHead>
+                            <TableHead>Item</TableHead>
+                            <TableHead>Part No</TableHead>
+                            <TableHead>Qty/Unit</TableHead>
+                            <TableHead>Weight/Unit</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {formData.items.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={7}
+                                    className="text-center py-6 text-muted-foreground"
+                                >
+                                    No items added yet.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            formData.items.map((item, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>
+                                        {item.ItemGroup.name}
+                                        {/* {getItemGroupName(item.itemGroupId)} */}
+                                    </TableCell>
+                                    <TableCell>{item.name}</TableCell>
+                                    <TableCell>{item.partNumber || "-"}</TableCell>
+                                    <TableCell>
+                                        {item.quantity} {item.Unit.shortName}
+                                    </TableCell>
+                                    <TableCell>{item.weight || "-"}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeItem(index)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Remove</span>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    )
+}
