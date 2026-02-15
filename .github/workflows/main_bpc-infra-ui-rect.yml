@@ -18,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'   # Use LTS instead of 22
+          node-version: '20.x'
 
       - name: Install dependencies
         run: npm install
@@ -30,9 +30,32 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: react-build
-          path: dist   # ✅ ONLY dist folder
+          path: dist
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permiss
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: react-build
+          path: ./dist
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CC86042AAB2D486BB4CAFE2043B14D47 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5E40495AC8FD41A7A58A4E33DBEAE50C }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_57DF24EEA522414E9530AC794E872D21 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: bpc-infra-ui-rect
+          slot-name: Production
+          package: ./dist
